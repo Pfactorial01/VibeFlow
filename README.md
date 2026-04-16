@@ -4,7 +4,7 @@ A short-form video feed: upload clips, browse **Latest** and **Trending**, like 
 
 ## Features
 
-- **Feed** with infinite scroll; **only the in-view video autoplays** (muted, loop), with viewport-based active clip selection.
+- **Feed** with infinite scroll; **only the in-view video autoplays** (loop), with viewport-based active clip selection.
 - **Mux Player** with a minimal chrome by default; **tap the lower third of the video** to reveal the bottom control bar (auto-hides after a few seconds).
 - **Auth**: sign up, log in, JWT access tokens with refresh sessions stored in Redis.
 - **Uploads** via Mux direct upload; webhook or polling syncs asset status into Postgres.
