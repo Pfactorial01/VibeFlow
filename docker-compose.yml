@@ -1,0 +1,95 @@
+# Full stack: Postgres + Redis + API + static web (nginx).
+# Build: docker compose build
+# Run:   docker compose up -d
+# App:   http://localhost:5173  (web)  ·  API: http://localhost:4000
+# Copy .env.example → .env and set JWT_SECRET + Mux vars. Compose overrides DB/Redis URLs for in-network services.
+#
+# Public Mux webhook (tunnel to the API container, not host npm):
+#   docker compose --profile ngrok up -d
+#   npm run webhook:url
+# Set NGROK_AUTHTOKEN in .env (from https://dashboard.ngrok.com/get-started/your-authtoken )
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: vibeflow
+      POSTGRES_PASSWORD: vibeflow
+      POSTGRES_DB: vibeflow
+    ports:
+      - "5433:5432"
+    volumes:
+      - vibeflow_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vibeflow -d vibeflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    volumes:
+      - vibeflow_redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: "4000"
+      DATABASE_URL: postgresql://vibeflow:vibeflow@postgres:5432/vibeflow?schema=public
+      DATABASE_DIRECT_URL: postgresql://vibeflow:vibeflow@postgres:5432/vibeflow?schema=public
+      REDIS_URL: redis://redis:6379
+      WEB_ORIGIN: http://localhost:5173,http://127.0.0.1:5173
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        VITE_API_URL: http://localhost:4000
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+
+  # Tunnels the Dockerized API (service name `api`) — use this for Mux webhooks, not host `npm run dev`.
+  ngrok:
+    image: ngrok/ngrok:latest
+    restart: unless-stopped
+    profiles:
+      - ngrok
+    depends_on:
+      - api
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN:?Set NGROK_AUTHTOKEN in .env for the ngrok profile}
+    command:
+      - "http"
+      - "api:4000"
+    ports:
+      - "4040:4040"
+
+volumes:
+  vibeflow_pg:
+  vibeflow_redis:

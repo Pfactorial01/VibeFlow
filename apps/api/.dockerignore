@@ -1,0 +1,11 @@
+# Builds use repo root as context (`docker build -f apps/api/Dockerfile .`);
+# the authoritative ignore list is /.dockerignore. This file exists so
+# Dockerfile-adjacent linters (e.g. dockerfile-roast DF033) see the same policy.
+node_modules
+**/node_modules
+dist
+.git
+.env
+**/.env
+*.log
+apps/web

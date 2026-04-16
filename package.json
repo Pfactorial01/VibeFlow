@@ -1,0 +1,29 @@
+{
+  "name": "vibeflow",
+  "private": true,
+  "workspaces": ["apps/*"],
+  "scripts": {
+    "dev": "concurrently \"npm run dev -w @vibeflow/api\" \"npm run dev -w @vibeflow/web\"",
+    "ngrok:api": "ngrok http 4000",
+    "dev:ngrok": "concurrently -n api,web,tunnel -c blue,green,magenta \"npm run dev -w @vibeflow/api\" \"npm run dev -w @vibeflow/web\" \"ngrok http 4000\"",
+    "webhook:url": "node scripts/print-ngrok-webhook-url.mjs",
+    "build": "npm run build -w @vibeflow/api && npm run build -w @vibeflow/web",
+    "db:generate": "npm run db:generate -w @vibeflow/api",
+    "db:migrate": "npm run db:migrate -w @vibeflow/api",
+    "db:push": "npm run db:push -w @vibeflow/api",
+    "upload:mux": "node --env-file=.env ./node_modules/.bin/tsx scripts/upload-videos-to-mux.ts",
+    "mux:cleanup": "node --env-file=.env ./node_modules/.bin/tsx apps/api/scripts/mux-cleanup.ts",
+    "mux:cleanup:run": "node --env-file=.env ./node_modules/.bin/tsx apps/api/scripts/mux-cleanup.ts --execute",
+    "mux:cleanup:reset": "node --env-file=.env ./node_modules/.bin/tsx apps/api/scripts/mux-cleanup.ts --execute --db-clear-videos",
+    "db:clear-videos": "node --env-file=.env ./node_modules/.bin/tsx apps/api/scripts/mux-cleanup.ts --db-only",
+    "sync:mux": "node --env-file=.env ./node_modules/.bin/tsx apps/api/scripts/sync-processing-videos.ts",
+    "docker:build": "docker compose build",
+    "docker:web": "docker compose build web && docker compose up -d web",
+    "docker:up": "docker compose up -d",
+    "docker:up:ngrok": "docker compose --profile ngrok up -d",
+    "docker:down": "docker compose down"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

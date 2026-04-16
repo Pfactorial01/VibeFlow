@@ -1,0 +1,15 @@
+.git
+.gitignore
+**/.cursor
+**/node_modules
+**/dist
+**/dist-ssr
+**/.env
+**/.env.*
+!**/.env.example
+**/coverage
+**/*.log
+**/.DS_Store
+**/.vscode
+**/agent-transcripts
+agent-transcripts

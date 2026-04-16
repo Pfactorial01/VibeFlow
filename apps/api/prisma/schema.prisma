@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_DIRECT_URL")
+}
+
+model User {
+  id           String    @id @default(uuid())
+  username     String    @unique
+  passwordHash String
+  videos       Video[]
+  likes        Like[]
+  comments     Comment[]
+  reports      Report[]
+  createdAt    DateTime  @default(now())
+}
+
+model Video {
+  id             String    @id @default(uuid())
+  muxUploadId    String?   @unique
+  muxAssetId     String?   @unique
+  muxPlaybackId  String?
+  thumbnail      String    @default("")
+  title          String?
+  status         String // processing | ready | error
+  likesCount     Int       @default(0)
+  commentsCount  Int       @default(0)
+  authorId       String
+  author         User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  likes          Like[]
+  comments       Comment[]
+  reports        Report[]
+  createdAt      DateTime  @default(now())
+
+  @@index([createdAt(sort: Desc)])
+  @@index([authorId])
+}
+
+model Like {
+  id        String   @id @default(uuid())
+  userId    String
+  videoId   String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, videoId])
+  @@index([videoId])
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  body      String
+  userId    String
+  videoId   String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([videoId])
+}
+
+model Report {
+  id         String   @id @default(uuid())
+  reason     String
+  status     String   @default("open") // open | reviewed
+  reporterId String
+  videoId    String
+  reporter   User     @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  video      Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@index([status])
+  @@index([videoId])
+}
