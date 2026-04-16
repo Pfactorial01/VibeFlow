@@ -101,7 +101,14 @@ export function VideoCard({ video, onUpdate, registerMediaEl, isActive }: Props)
     const player = playerRef.current;
     if (!player || !canPlay) return;
     if (isActive) {
-      void player.play().catch(() => {});
+      player.muted = false;
+      void player.play().catch((err: unknown) => {
+        const name = err instanceof Error ? err.name : "";
+        if (name === "NotAllowedError") {
+          player.muted = true;
+          void player.play().catch(() => {});
+        }
+      });
     } else {
       player.pause();
     }
@@ -132,7 +139,6 @@ export function VideoCard({ video, onUpdate, registerMediaEl, isActive }: Props)
               streamType="on-demand"
               thumbnailTime={0}
               accentColor="#6366f1"
-              muted
               playsInline
               loop
               style={
